@@ -1,0 +1,179 @@
+Задача: Разработка приложения "Менеджер задач"
+Цель:
+Создать desktop-приложение для управления задачами (добавление, удаление, сохранение в файл) с использованием ООП, графического интерфейса (Tkinter) и системы контроля версий Git/GitHub.
+Технические требования:
+1.	Реализовать систему классов для представления задач и логики приложения.
+2.	Использовать Tkinter для создания окон, кнопок и форм ввода.
+3.	Обеспечить сохранение задач в файл и загрузку при запуске.
+4.	Разместить код в репозитории GitHub.
+Шаги выполнения:
+Шаг 1: Проектирование классов
+Создайте два основных класса:
+
+Task: описывает отдельную задачу.
+
+Атрибуты: title (название), description (описание), due_date (срок выполнения).
+
+TaskManager: управляет списком задач и файловыми операциями.
+
+Методы: add_task(), delete_task(), save_to_file(), load_from_file().
+
+Пример кода (classes.py):
+
+import json
+from datetime import datetime
+
+class Task:
+    def __init__(self, title, description, due_date):
+        self.title = title
+        self.description = description
+        self.due_date = due_date
+
+class TaskManager:
+    def __init__(self, filename="tasks.json"):
+        self.filename = filename
+        self.tasks = []
+        self.load_from_file()
+
+    def add_task(self, task):
+        self.tasks.append(task)
+        self.save_to_file()
+
+    def delete_task(self, index):
+        if 0 <= index < len(self.tasks):
+            del self.tasks[index]
+            self.save_to_file()
+
+    def save_to_file(self):
+        data = [
+            {
+                "title": task.title,
+                "description": task.description,
+                "due_date": task.due_date
+            }
+            for task in self.tasks
+        ]
+        with open(self.filename, "w") as f:
+            json.dump(data, f, indent=4)
+
+    def load_from_file(self):
+        try:
+            with open(self.filename, "r") as f:
+                data = json.load(f)
+                self.tasks = [
+                    Task(item["title"], item["description"], item["due_date"])
+                    for item in data
+                ]
+        except FileNotFoundError:
+            self.tasks = []
+
+Шаг 2: Создание графического интерфейса
+Используйте Tkinter для построения окна с:
+•	Полями ввода: Entry для названия, Text для описания, Calendar (из tkinter.ttk) для даты.
+•	Кнопками: "Добавить задачу", "Удалить задачу".
+•	Списком задач (Listbox).
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+from classes import Task, TaskManager
+
+class TaskManagerApp:
+    def __init__(self, root):
+        self.manager = TaskManager()
+        self.root = root
+        self.root.title("Менеджер задач")
+        self.setup_ui()
+
+    def setup_ui(self):
+        # Поля ввода
+        tk.Label(self.root, text="Название").grid(row=0, column=0)
+        self.title_entry = tk.Entry(self.root)
+        self.title_entry.grid(row=0, column=1)
+
+        tk.Label(self.root, text="Описание").grid(row=1, column=0)
+        self.desc_text = tk.Text(self.root, height=3, width=30)
+        self.desc_text.grid(row=1, column=1)
+
+        tk.Label(self.root, text="Срок выполнения (ГГГГ-ММ-ДД)").grid(row=2, column=0)
+        self.date_entry = tk.Entry(self.root)
+        self.date_entry.grid(row=2, column=1)
+
+        # Кнопки
+        tk.Button(self.root, text="Добавить", command=self.add_task).grid(row=3, column=0)
+        tk.Button(self.root, text="Удалить", command=self.delete_task).grid(row=3, column=1)
+
+        # Список задач
+        self.tasks_listbox = tk.Listbox(self.root, width=50)
+        self.tasks_listbox.grid(row=4, column=0, columnspan=2)
+        self.update_listbox()
+
+    def add_task(self):
+        title = self.title_entry.get()
+        description = self.desc_text.get("1.0", tk.END).strip()
+        due_date = self.date_entry.get()
+        if title and description and due_date:
+            task = Task(title, description, due_date)
+            self.manager.add_task(task)
+            self.update_listbox()
+            self.clear_inputs()
+        else:
+            messagebox.showwarning("Ошибка", "Заполните все поля!")
+
+    def delete_task(self):
+        selected = self.tasks_listbox.curselection()
+        if selected:
+            self.manager.delete_task(selected[0])
+            self.update_listbox()
+
+    def update_listbox(self):
+        self.tasks_listbox.delete(0, tk.END)
+        for task in self.manager.tasks:
+            self.tasks_listbox.insert(tk.END, f"{task.title} (до {task.due_date})")
+
+    def clear_inputs(self):
+        self.title_entry.delete(0, tk.END)
+        self.desc_text.delete("1.0", tk.END)
+        self.date_entry.delete(0, tk.END)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TaskManagerApp(root)
+    root.mainloop()
+
+Шаг 4: Настройка Git и GitHub
+1.	Установите Git и создайте аккаунт на GitHub.
+2.	В терминале выполните:
+
+git init
+git add .
+git commit -m "Initial commit: Task Manager app"
+
+Создайте репозиторий на GitHub и выполните
+
+git remote add origin https://github.com/ваш-логин/task-manager.git
+git branch -M main
+git push -u origin main
+
+Шаг 5: Финальные требования к репозиторию
+•	В корне должны быть файлы: classes.py, gui.py, tasks.json, README.md.
+•	В README.md опишите проект: как установить, запустить и использовать.
+•	Пример README.md:
+# Task Manager
+Простое приложение для управления задачами.
+
+## Запуск
+1. Установите Python 3.x.
+2. Запустите `gui.py`.
+3. Добавляйте задачи через форму, удаляйте выбором в списке.
+
+## Функциональность
+- Добавление/удаление задач.
+- Автосохранение в JSON-файл.
+
+Итог:
+Вы создадите полноценное приложение, демонстрирующее:
+•	ООП (классы Task, TaskManager).
+•	Работу с GUI (Tkinter).
+•	Чтение/запись файлов .
+•	Систему контроля версий (Git/GitHub).
+
