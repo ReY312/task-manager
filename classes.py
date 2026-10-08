@@ -38,11 +38,11 @@ class TaskManager:
 
     def load_from_file(self):
         try:
-            with open(self.filename, "r", encoding="utf-8") as f:
+            with open(self.filename, "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
                 self.tasks = [
                     Task(item["title"], item["description"], item["due_date"])
                     for item in data
                 ]
-        except FileNotFoundError:
+        except (FileNotFoundError, json.JSONDecodeError):
             self.tasks = []
